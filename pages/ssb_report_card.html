@@ -1,0 +1,288 @@
+cat << 'HTMLEOF' > /mnt/user-data/outputs/ssb_report_card.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SSB Daily Report</title>
+  <script src="../config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f1729; min-height: 100vh; font-family: 'Segoe UI', sans-serif; padding: 24px; display: flex; flex-direction: column; align-items: center; }
+    .top-actions { display: flex; gap: 12px; margin-bottom: 20px; }
+    .action-btn { padding: 10px 24px; border-radius: 10px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-save { background: #4f8ef7; color: white; }
+    .btn-back { background: rgba(255,255,255,0.1); color: white; }
+    #reportCard { width: 100%; max-width: 1000px; background: #1a2540; border-radius: 20px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .rh { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .rh-left { display: flex; align-items: center; gap: 14px; }
+    .rh-logo { width: 42px; height: 42px; background: linear-gradient(135deg, #4f8ef7, #7c5fe6); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .rh-title { font-size: 18px; font-weight: 700; color: white; }
+    .rh-sub { font-size: 12px; color: #6b7fa3; margin-top: 2px; }
+    .rh-date { font-size: 12px; color: #6b7fa3; }
+    .rh-name { font-size: 14px; font-weight: 600; color: white; margin-top: 2px; }
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .scard { border-radius: 14px; padding: 16px 18px; position: relative; overflow: hidden; }
+    .scard-blue   { background: linear-gradient(135deg, #1e3a6e, #2a52a0); }
+    .scard-purple { background: linear-gradient(135deg, #2d1f5e, #5235a0); }
+    .scard-green  { background: linear-gradient(135deg, #0f3d2e, #1a7a52); }
+    .scard-orange { background: linear-gradient(135deg, #4a2200, #c05a00); }
+    .scard-icon { font-size: 24px; margin-bottom: 8px; }
+    .scard-num { font-size: 28px; font-weight: 800; color: white; line-height: 1; }
+    .scard-lbl { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+    .scard-change { position: absolute; top: 14px; right: 14px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 20px; color: white; }
+    .charts-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .chart-panel { background: #0f1729; border-radius: 14px; padding: 18px; }
+    .chart-title { font-size: 13px; font-weight: 600; color: white; margin-bottom: 4px; }
+    .chart-sub { font-size: 11px; color: #6b7fa3; margin-bottom: 14px; }
+    .bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .bp { background: #0f1729; border-radius: 14px; padding: 18px; }
+    .bp-title { font-size: 12px; font-weight: 600; color: #6b7fa3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .streak-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+    .s-dot { width: 20px; height: 20px; border-radius: 5px; }
+    .s-dot.done  { background: #4f8ef7; }
+    .s-dot.today { background: #7c5fe6; box-shadow: 0 0 8px #7c5fe6; }
+    .s-dot.miss  { background: #1e2d4a; }
+    .topic-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #1a2540; }
+    .topic-row:last-child { border-bottom: none; }
+    .topic-name { font-size: 12px; color: #c8d6f0; }
+    .topic-bar-wrap { width: 80px; height: 6px; background: #1a2540; border-radius: 3px; overflow: hidden; }
+    .topic-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #4f8ef7, #7c5fe6); }
+    .topic-pct { font-size: 11px; color: #4f8ef7; font-weight: 600; margin-left: 6px; }
+    .ring-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .ring-num { font-size: 28px; font-weight: 800; color: white; text-align: center; margin-top: 10px; }
+    .ring-lbl { font-size: 11px; color: #6b7fa3; text-align: center; margin-top: 4px; }
+    .rf { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #1e2d4a; }
+    .rf-brand { font-size: 12px; color: #6b7fa3; font-weight: 600; }
+    .rf-tag { font-size: 11px; color: #6b7fa3; }
+  </style>
+</head>
+<body>
+
+<div class="top-actions">
+  <button class="action-btn btn-back" onclick="window.history.back()">← Back to Dashboard</button>
+  <button class="action-btn btn-save" onclick="saveReport()">📸 Save as Image</button>
+</div>
+
+<div id="reportCard">
+  <div class="rh">
+    <div class="rh-left">
+      <div class="rh-logo">🪖</div>
+      <div>
+        <div class="rh-title">SSB Prep — Daily Report</div>
+        <div class="rh-sub">ni8.ai powered analytics</div>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div class="rh-date" id="rDate"></div>
+      <div class="rh-name" id="rName"></div>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="scard scard-blue">
+      <div class="scard-icon">📅</div>
+      <div class="scard-num" id="s1">--</div>
+      <div class="scard-lbl">Days to SSB Exam</div>
+      <div class="scard-change">July 4</div>
+    </div>
+    <div class="scard scard-purple">
+      <div class="scard-icon">⏱️</div>
+      <div class="scard-num" id="s2">0m</div>
+      <div class="scard-lbl">App used today</div>
+      <div class="scard-change" id="s2change">+0m</div>
+    </div>
+    <div class="scard scard-green">
+      <div class="scard-icon">⭐</div>
+      <div class="scard-num" id="s3">0</div>
+      <div class="scard-lbl">Total XP earned</div>
+      <div class="scard-change" id="s3change">🪖</div>
+    </div>
+    <div class="scard scard-orange">
+      <div class="scard-icon">🔥</div>
+      <div class="scard-num" id="s4">0</div>
+      <div class="scard-lbl">Day Streak</div>
+      <div class="scard-change">days</div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-panel">
+      <div class="chart-title">Study Time — Last 7 Days</div>
+      <div class="chart-sub">Daily minutes spent in app</div>
+      <canvas id="studyChart" height="120"></canvas>
+    </div>
+    <div class="chart-panel">
+      <div class="chart-title">Knowledge Score</div>
+      <div class="chart-sub">Weekly test performance (%)</div>
+      <canvas id="scoreChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <div class="bp">
+      <div class="bp-title">🔥 Streak — Last 14 Days</div>
+      <div class="streak-grid" id="streakGrid"></div>
+    </div>
+    <div class="bp">
+      <div class="bp-title">📚 Topics Learned</div>
+      <div class="topic-row"><span class="topic-name">GK & Current Affairs</span><div class="topic-bar-wrap"><div class="topic-bar" id="tb1" style="width:0%"></div></div><span class="topic-pct" id="tp1">0%</span></div>
+      <div class="topic-row"><span class="topic-name">OIR Reasoning</span><div class="topic-bar-wrap"><div class="topic-bar" id="tb2" style="width:0%"></div></div><span class="topic-pct" id="tp2">0%</span></div>
+      <div class="topic-row"><span class="topic-name">English & Vocab</span><div class="topic-bar-wrap"><div class="topic-bar" id="tb3" style="width:0%"></div></div><span class="topic-pct" id="tp3">0%</span></div>
+      <div class="topic-row"><span class="topic-name">Psychology Tests</span><div class="topic-bar-wrap"><div class="topic-bar" id="tb4" style="width:0%"></div></div><span class="topic-pct" id="tp4">0%</span></div>
+      <div class="topic-row"><span class="topic-name">Physical Fitness</span><div class="topic-bar-wrap"><div class="topic-bar" id="tb5" style="width:0%"></div></div><span class="topic-pct" id="tp5">0%</span></div>
+    </div>
+    <div class="bp">
+      <div class="bp-title">✅ Tasks Completion</div>
+      <div class="ring-wrap">
+        <canvas id="ringChart" width="120" height="120"></canvas>
+        <div class="ring-num" id="ringPct">0%</div>
+        <div class="ring-lbl">of today's tasks done</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rf">
+    <div class="rf-brand">ni8.ai — SSB Prep Buddy</div>
+    <div class="rf-tag">Keep going da! Every day counts 💪</div>
+  </div>
+</div>
+
+<script>
+  const CLAUDE_API_KEY = CONFIG.CLAUDE_API_KEY;
+  const profile  = JSON.parse(localStorage.getItem('ssbProfile') || '{}');
+  const name     = profile.name || 'Soldier';
+  const examDate = new Date(profile.examDate || '2026-07-04');
+  const totalXP  = parseInt(localStorage.getItem('totalXP') || '0');
+  const streak   = parseInt(localStorage.getItem('streak')  || '1');
+
+  function getRank(xp) {
+    if (xp < 100)  return '🪖 Recruit';
+    if (xp < 300)  return '⚔️ Cadet';
+    if (xp < 600)  return '🎖️ Lance Naik';
+    if (xp < 1000) return '🏅 Havildar';
+    return '⭐ Officer';
+  }
+
+  document.getElementById('rDate').textContent = new Date().toDateString();
+  document.getElementById('rName').textContent = name + ' — ' + getRank(totalXP);
+
+  const today2 = new Date(); today2.setHours(0,0,0,0);
+  const diff   = Math.ceil((examDate - today2) / (1000*60*60*24));
+  document.getElementById('s1').textContent = diff > 0 ? diff : 0;
+
+  function getUsageMinutes() {
+    const today = new Date().toDateString();
+    return parseInt(localStorage.getItem('usage_' + today) || '0');
+  }
+
+  function getLast7Usage() {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      days.push(parseInt(localStorage.getItem('usage_' + d.toDateString()) || '0'));
+    }
+    return days;
+  }
+
+  function getLast7Scores() {
+    const scores = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      scores.push(parseInt(localStorage.getItem('score_' + d.toDateString()) || '0'));
+    }
+    return scores;
+  }
+
+  function getTasksDone() {
+    return parseInt(localStorage.getItem('tasksDone_' + new Date().toDateString()) || '0');
+  }
+
+  const usageMins = getUsageMinutes();
+  document.getElementById('s2').textContent       = usageMins + 'm';
+  document.getElementById('s2change').textContent = '+' + usageMins + 'm today';
+  document.getElementById('s3').textContent       = totalXP;
+  document.getElementById('s3change').textContent = getRank(totalXP);
+  document.getElementById('s4').textContent       = streak;
+
+  const labels7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    labels7.push(d.toLocaleDateString('en',{weekday:'short'}));
+  }
+
+  new Chart(document.getElementById('studyChart'), {
+    type: 'line',
+    data: {
+      labels: labels7,
+      datasets: [{ label: 'Minutes', data: getLast7Usage(), borderColor: '#4f8ef7', backgroundColor: 'rgba(79,142,247,0.15)', borderWidth: 2.5, pointBackgroundColor: '#4f8ef7', pointRadius: 4, tension: 0.4, fill: true }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6b7fa3', font: { size: 11 } }, grid: { color: '#1e2d4a' } }, y: { ticks: { color: '#6b7fa3', font: { size: 11 } }, grid: { color: '#1e2d4a' } } } }
+  });
+
+  const scoreData = getLast7Scores();
+  new Chart(document.getElementById('scoreChart'), {
+    type: 'bar',
+    data: {
+      labels: labels7,
+      datasets: [{ label: 'Score %', data: scoreData, backgroundColor: scoreData.map(s => s >= 70 ? 'rgba(79,142,247,0.8)' : 'rgba(124,95,230,0.8)'), borderRadius: 6 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6b7fa3', font: { size: 11 } }, grid: { color: '#1e2d4a' } }, y: { min:0, max:100, ticks: { color: '#6b7fa3', font: { size: 11 } }, grid: { color: '#1e2d4a' } } } }
+  });
+
+  const streakGrid = document.getElementById('streakGrid');
+  for (let i = 13; i >= 0; i--) {
+    const d   = new Date(); d.setDate(d.getDate() - i);
+    const dot = document.createElement('div');
+    dot.className = 's-dot ' + (i === 0 ? 'today' : (i < streak ? 'done' : 'miss'));
+    dot.title     = d.toDateString();
+    streakGrid.appendChild(dot);
+  }
+
+  const topics = [
+    { id: 'tb1', pid: 'tp1', base: Math.min(90, 20 + totalXP/5) },
+    { id: 'tb2', pid: 'tp2', base: Math.min(85, 10 + totalXP/6) },
+    { id: 'tb3', pid: 'tp3', base: Math.min(80, 15 + totalXP/7) },
+    { id: 'tb4', pid: 'tp4', base: Math.min(70, 5  + totalXP/8) },
+    { id: 'tb5', pid: 'tp5', base: Math.min(75, 10 + totalXP/6) }
+  ];
+  topics.forEach(t => {
+    const pct = Math.round(t.base);
+    document.getElementById(t.id).style.width   = pct + '%';
+    document.getElementById(t.pid).textContent  = pct + '%';
+  });
+
+  const tasksDone = getTasksDone();
+  const tasksPct  = Math.round((tasksDone/5)*100);
+  document.getElementById('ringPct').textContent = tasksPct + '%';
+  new Chart(document.getElementById('ringChart'), {
+    type: 'doughnut',
+    data: { datasets: [{ data: [tasksPct, 100-tasksPct], backgroundColor: ['#4f8ef7','#1e2d4a'], borderWidth: 0, borderRadius: 4 }] },
+    options: { cutout: '72%', plugins: { legend: { display: false } } }
+  });
+
+  setInterval(() => {
+    const today = new Date().toDateString();
+    const prev  = parseInt(localStorage.getItem('usage_' + today) || '0');
+    localStorage.setItem('usage_' + today, prev + 1);
+    document.getElementById('s2').textContent       = (prev+1) + 'm';
+    document.getElementById('s2change').textContent = '+' + (prev+1) + 'm today';
+  }, 60000);
+
+  function saveReport() {
+    const btn = document.querySelector('.btn-save');
+    btn.textContent = '⏳ Saving...';
+    html2canvas(document.getElementById('reportCard'), { scale: 2, backgroundColor: '#1a2540', useCORS: true }).then(canvas => {
+      const link      = document.createElement('a');
+      link.download   = 'SSB-Report-' + name + '-' + new Date().toDateString().replace(/ /g,'-') + '.png';
+      link.href       = canvas.toDataURL();
+      link.click();
+      btn.textContent = '✅ Saved!';
+      setTimeout(() => { btn.textContent = '📸 Save as Image'; }, 3000);
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SSB Prep — Daily Test</title>
+  <script src="../config.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    .top-bar { background: #1a3c5e; color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .top-bar h1 { font-size: 17px; font-weight: 600; }
+    .back-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+    .container { max-width: 560px; margin: 0 auto; padding: 20px 16px 80px; }
+    .cat-title { font-size: 20px; font-weight: 700; color: #1a3c5e; margin-bottom: 4px; }
+    .cat-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+    .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .cat-btn { background: white; border: 2px solid #e0e7ef; border-radius: 16px; padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .cat-btn:hover { border-color: #1a3c5e; background: #e8f0fe; transform: translateY(-2px); }
+    .cat-icon { font-size: 30px; margin-bottom: 8px; }
+    .cat-name { font-size: 13px; font-weight: 600; color: #1a3c5e; }
+    .cat-desc { font-size: 11px; color: #888; margin-top: 3px; }
+    .cat-meta { display: flex; justify-content: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .cat-tag { font-size: 10px; background: #e8f0fe; color: #1a3c5e; padding: 2px 8px; border-radius: 10px; }
+    .start-all-btn { width: 100%; background: linear-gradient(135deg, #1a3c5e, #2563a8); color: white; border: none; border-radius: 12px; padding: 15px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 14px; }
+    .history-card { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .history-title { font-size: 13px; font-weight: 600; color: #1a3c5e; margin-bottom: 10px; }
+    .hist-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f0f4f8; font-size: 12px; color: #555; }
+    .hist-row:last-child { border-bottom: none; }
+    .hist-score { font-weight: 600; color: #1a3c5e; }
+    .loading-screen { text-align: center; padding: 60px 20px; }
+    .loading-icon { font-size: 48px; animation: spin 1.2s linear infinite; display: inline-block; }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .loading-text { font-size: 16px; color: #1a3c5e; font-weight: 600; margin-top: 16px; }
+    .loading-sub { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.6; }
+    .loading-steps { margin-top: 20px; text-align: left; background: white; border-radius: 12px; padding: 14px; }
+    .load-step { font-size: 12px; color: #888; padding: 5px 0; display: flex; gap: 8px; align-items: center; }
+    .load-step.done { color: #1b5e20; }
+    .load-step.active { color: #1a3c5e; font-weight: 600; }
+    .test-header { background: white; border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .test-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .q-counter { font-size: 13px; font-weight: 600; color: #1a3c5e; }
+    .timer-box { padding: 5px 14px; border-radius: 20px; font-size: 14px; font-weight: 700; color: white; background: #1a3c5e; }
+    .timer-box.warn { background: #e53935; animation: pulse 0.5s infinite alternate; }
+    @keyframes pulse { from{opacity:1} to{opacity:0.7} }
+    .prog-bar { background: #f0f4f8; height: 6px; border-radius: 3px; overflow: hidden; }
+    .prog-fill { height: 100%; background: linear-gradient(90deg, #1a3c5e, #2563a8); border-radius: 3px; transition: width 0.4s; }
+    .score-live { font-size: 11px; color: #888; margin-top: 6px; text-align: right; }
+    .q-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .q-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; margin-bottom: 12px; display: inline-block; }
+    .badge-gk      { background: #e8f0fe; color: #1a3c5e; }
+    .badge-oir     { background: #e8f5e9; color: #1b5e20; }
+    .badge-english { background: #fff8e1; color: #e65100; }
+    .badge-current { background: #fce4ec; color: #880e4f; }
+    .badge-defence { background: #ede7f6; color: #311b92; }
+    .badge-mixed   { background: #f3e5f5; color: #4a148c; }
+    .q-text { font-size: 16px; font-weight: 600; color: #222; line-height: 1.6; margin-bottom: 18px; }
+    .opt-btn { width: 100%; text-align: left; padding: 13px 16px; border: 2px solid #e0e7ef; border-radius: 12px; background: white; font-size: 14px; color: #333; cursor: pointer; margin-bottom: 10px; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+    .opt-btn:hover:not(:disabled) { border-color: #1a3c5e; background: #f0f4ff; }
+    .opt-btn.correct { border-color: #4CAF50; background: #e8f5e9; color: #1b5e20; font-weight: 600; }
+    .opt-btn.wrong   { border-color: #e53935; background: #ffebee; color: #b71c1c; }
+    .opt-label { width: 28px; height: 28px; border-radius: 7px; background: #f0f4f8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .opt-btn.correct .opt-label { background: #4CAF50; color: white; }
+    .opt-btn.wrong   .opt-label { background: #e53935; color: white; }
+    .exp-box { border-radius: 12px; padding: 14px 16px; margin-top: 4px; margin-bottom: 14px; display: none; }
+    .exp-box.show { display: block; }
+    .exp-box.right { background: #e8f5e9; border-left: 4px solid #4CAF50; }
+    .exp-box.wrong { background: #fff8e1; border-left: 4px solid #ffa000; }
+    .exp-head { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .exp-body { font-size: 13px; line-height: 1.6; color: #333; }
+    .next-btn { width: 100%; background: #1a3c5e; color: white; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; display: none; }
+    .next-btn.show { display: block; }
+    .result-wrap { text-align: center; }
+    .res-circle { width: 130px; height: 130px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; color: white; margin: 0 auto 16px; }
+    .res-great  { background: linear-gradient(135deg, #1a3c5e, #2563a8); }
+    .res-good   { background: linear-gradient(135deg, #1b5e20, #388e3c); }
+    .res-ok     { background: linear-gradient(135deg, #e65100, #f57c00); }
+    .res-poor   { background: linear-gradient(135deg, #b71c1c, #e53935); }
+    .res-title { font-size: 22px; font-weight: 700; color: #1a3c5e; margin-bottom: 6px; }
+    .res-sub   { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+    .res-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+    .rs { background: white; border-radius: 12px; padding: 12px 8px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .rs-n { font-size: 20px; font-weight: 700; color: #1a3c5e; }
+    .rs-l { font-size: 10px; color: #888; margin-top: 3px; }
+    .review-section { text-align: left; margin-bottom: 20px; }
+    .review-title { font-size: 14px; font-weight: 700; color: #1a3c5e; margin-bottom: 12px; }
+    .rev-card { background: white; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .rev-q    { font-size: 13px; font-weight: 600; color: #1a3c5e; margin-bottom: 8px; line-height: 1.5; }
+    .rev-row  { font-size: 12px; padding: 6px 10px; border-radius: 8px; margin-bottom: 4px; line-height: 1.5; }
+    .rev-yours   { background: #ffebee; color: #b71c1c; }
+    .rev-correct { background: #e8f5e9; color: #1b5e20; font-weight: 600; }
+    .rev-exp     { background: #f5f5f5; color: #555; }
+    .res-btn { width: 100%; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+    .res-primary   { background: #1a3c5e; color: white; }
+    .res-secondary { background: white; color: #1a3c5e; border: 2px solid #1a3c5e; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e0e7ef; display: flex; max-width: 560px; margin: 0 auto; }
+    .nav-item { flex: 1; padding: 10px 0; text-align: center; font-size: 10px; color: #888; cursor: pointer; }
+    .nav-item.active { color: #1a3c5e; font-weight: 600; }
+    .nav-icon { font-size: 20px; display: block; }
+  </style>
+</head>
+<body>
+<div class="top-bar">
+  <h1>📝 Daily Test — 50 Questions</h1>
+  <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back</button>
+</div>
+<div class="container">
+
+  <!-- Category Screen -->
+  <div id="catScreen">
+    <div class="cat-title">Choose Your Test 🎯</div>
+    <div class="cat-sub">AI generates fresh questions daily — no repeats! Recent 2025-2026 current affairs included.</div>
+    <div class="cat-grid">
+      <div class="cat-btn" onclick="startTest('GK')">
+        <div class="cat-icon">🌍</div>
+        <div class="cat-name">GK & History</div>
+        <div class="cat-desc">India, Army, Geography</div>
+        <div class="cat-meta"><span class="cat-tag">10 Qs</span><span class="cat-tag">30s each</span></div>
+      </div>
+      <div class="cat-btn" onclick="startTest('Current Affairs')">
+        <div class="cat-icon">📰</div>
+        <div class="cat-name">Current Affairs</div>
+        <div class="cat-desc">2025-2026 latest events</div>
+        <div class="cat-meta"><span class="cat-tag">10 Qs</span><span class="cat-tag">30s each</span></div>
+      </div>
+      <div class="cat-btn" onclick="startTest('OIR')">
+        <div class="cat-icon">🧠</div>
+        <div class="cat-name">OIR Reasoning</div>
+        <div class="cat-desc">Verbal & Non-verbal</div>
+        <div class="cat-meta"><span class="cat-tag">10 Qs</span><span class="cat-tag">45s each</span></div>
+      </div>
+      <div class="cat-btn" onclick="startTest('English')">
+        <div class="cat-icon">📖</div>
+        <div class="cat-name">English & Vocab</div>
+        <div class="cat-desc">Grammar, synonyms</div>
+        <div class="cat-meta"><span class="cat-tag">10 Qs</span><span class="cat-tag">30s each</span></div>
+      </div>
+      <div class="cat-btn" onclick="startTest('Defence')">
+        <div class="cat-icon">🪖</div>
+        <div class="cat-name">Defence & Army</div>
+        <div class="cat-desc">Indian Armed Forces</div>
+        <div class="cat-meta"><span class="cat-tag">10 Qs</span><span class="cat-tag">30s each</span></div>
+      </div>
+      <div class="cat-btn" onclick="startTest('Mixed')">
+        <div class="cat-icon">🎯</div>
+        <div class="cat-name">Mixed Test</div>
+        <div class="cat-desc">All topics combined</div>
+        <div class="cat-meta"><span class="cat-tag">10 Qs</span><span class="cat-tag">35s each</span></div>
+      </div>
+    </div>
+    <button class="start-all-btn" onclick="startTest('Full50')">🚀 Full SSB Mock — All 50 Questions</button>
+    <div class="history-card">
+      <div class="history-title">📊 Today's Test History</div>
+      <div id="historyContent"><div style="font-size:13px;color:#888;">No tests today — start now!</div></div>
+    </div>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loadScreen" style="display:none;">
+    <div class="loading-screen">
+      <div class="loading-icon">⚙️</div>
+      <div class="loading-text">Questions Generate ஆகுது...</div>
+      <div class="loading-sub">Claude AI + Web Search<br>Recent 2025-2026 questions தயார் பண்றது!</div>
+      <div class="loading-steps">
+        <div class="load-step active" id="ls1">🔍 Recent news & trends search பண்றது...</div>
+        <div class="load-step" id="ls2">🧠 Questions generate பண்றது...</div>
+        <div class="load-step" id="ls3">✅ Answers & explanations add பண்றது...</div>
+        <div class="load-step" id="ls4">🎯 Test ready பண்றது...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Screen -->
+  <div id="testScreen" style="display:none;">
+    <div class="test-header">
+      <div class="test-top">
+        <div class="q-counter" id="qCounter">Q 1 / 10</div>
+        <div class="timer-box" id="timerBox">⏱ 30s</div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <div class="score-live" id="scoreLive">Score: 0/0</div>
+    </div>
+    <div class="q-card">
+      <div class="q-badge" id="qBadge">GK</div>
+      <div class="q-text" id="qText"></div>
+      <div id="optsContainer"></div>
+      <div class="exp-box" id="expBox">
+        <div class="exp-head" id="expHead">💡 Explanation</div>
+        <div class="exp-body" id="expBody"></div>
+      </div>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">Next Question →</button>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="resultScreen" style="display:none;">
+    <div class="result-wrap">
+      <div class="res-circle" id="resCircle">--</div>
+      <div class="res-title" id="resTitle">Test Complete!</div>
+      <div class="res-sub"   id="resSub"></div>
+      <div class="res-stats">
+        <div class="rs"><div class="rs-n" id="rsTotal">0</div><div class="rs-l">Total Qs</div></div>
+        <div class="rs"><div class="rs-n" id="rsRight">0</div><div class="rs-l">✅ Correct</div></div>
+        <div class="rs"><div class="rs-n" id="rsWrong">0</div><div class="rs-l">❌ Wrong</div></div>
+        <div class="rs"><div class="rs-n" id="rsXP">+0</div><div class="rs-l">⭐ XP</div></div>
+      </div>
+      <div class="review-section">
+        <div class="review-title">📋 Wrong Answers — Review & Learn:</div>
+        <div id="reviewList"></div>
+      </div>
+      <button class="res-btn res-primary"   onclick="showCat()">🔄 Take Another Test</button>
+      <button class="res-btn res-secondary" onclick="window.location.href='dashboard.html'">🏠 Dashboard</button>
+    </div>
+  </div>
+
+</div>
+<div class="bottom-nav">
+  <div class="nav-item" onclick="window.location.href='dashboard.html'"><span class="nav-icon">🏠</span>Home</div>
+  <div class="nav-item active"><span class="nav-icon">📝</span>Tests</div>
+  <div class="nav-item" onclick="window.location.href='practice.html'"><span class="nav-icon">🎯</span>Practice</div>
+  <div class="nav-item" onclick="window.location.href='../index.html'"><span class="nav-icon">👤</span>Profile</div>
+</div>
+
+<script>
+  const CLAUDE_API_KEY = CONFIG.CLAUDE_API_KEY;
+  const profile  = JSON.parse(localStorage.getItem('ssbProfile') || '{}');
+  const name     = profile.name || 'Soldier';
+  let questions  = [];
+  let currentQ   = 0;
+  let score      = 0;
+  let wrongItems = [];
+  let answered   = false;
+  let timerInt   = null;
+  let timeLeft   = 30;
+  let category   = 'GK';
+  const timings  = { 'GK':30, 'Current Affairs':30, 'OIR':45, 'English':30, 'Defence':30, 'Mixed':35, 'Full50':35 };
+
+  function getAsked() {
+    return JSON.parse(localStorage.getItem('askedQ_' + new Date().toDateString()) || '[]');
+  }
+  function saveAsked(qList) {
+    const prev  = getAsked();
+    const texts = qList.map(q => q.question.substring(0,50));
+    localStorage.setItem('askedQ_' + new Date().toDateString(), JSON.stringify([...new Set([...prev,...texts])]));
+  }
+
+  function loadHistory() {
+    const hist = JSON.parse(localStorage.getItem('testHistory_' + new Date().toDateString()) || '[]');
+    const el   = document.getElementById('historyContent');
+    if (!hist.length) { el.innerHTML = '<div style="font-size:13px;color:#888;">No tests today — start now!</div>'; return; }
+    el.innerHTML = hist.map(h => `<div class="hist-row"><span>${h.cat} (${h.count} Qs)</span><span class="hist-score">${h.score}% — +${h.xp} XP</span></div>`).join('');
+  }
+  loadHistory();
+
+  function animateSteps() {
+    const steps = ['ls1','ls2','ls3','ls4'];
+    let i = 0;
+    return setInterval(() => {
+      steps.forEach(s => document.getElementById(s).className = 'load-step');
+      if (i < steps.length) {
+        document.getElementById(steps[i]).className = 'load-step active';
+        if (i > 0) document.getElementById(steps[i-1]).className = 'load-step done';
+      }
+      i++;
+      if (i >= steps.length) steps.forEach(s => document.getElementById(s).className = 'load-step done');
+    }, 800);
+  }
+
+  async function startTest(cat) {
+    category      = cat;
+    const qCount  = cat === 'Full50' ? 50 : 10;
+    const asked   = getAsked();
+    const avoidStr = asked.length ? `\nDo NOT repeat: ${asked.slice(-20).join(', ')}` : '';
+    document.getElementById('catScreen').style.display  = 'none';
+    document.getElementById('loadScreen').style.display = 'block';
+    const stepInt = animateSteps();
+    const today   = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+    const prompts = {
+      'GK':             `Generate ${qCount} GK MCQ questions for Indian SSB exam. Cover: Indian history, geography, polity, economy, science, sports.`,
+      'Current Affairs':`Generate ${qCount} Current Affairs MCQ from RECENT events 2025-May 2026. Cover: India politics, economy, defence, international relations, ISRO, awards, sports.`,
+      'OIR':            `Generate ${qCount} OIR MCQ questions for SSB. Include: number series, analogies, verbal reasoning, odd one out, coding-decoding, logical sequences.`,
+      'English':        `Generate ${qCount} English MCQ for SSB. Cover: synonyms, antonyms, fill in blanks, sentence correction, idioms, one-word substitution, grammar.`,
+      'Defence':        `Generate ${qCount} Indian Defence & Armed Forces MCQ (2025-2026). Cover: Army regiments, defence acquisitions, military exercises, weapons, NDA/CDS/SSB process.`,
+      'Mixed':          `Generate ${qCount} mixed MCQ for SSB combining GK, Current Affairs 2025-2026, OIR, English, Defence equally.`,
+      'Full50':         `Generate 50 comprehensive SSB mock test MCQ covering all topics equally (10 each): GK, Current Affairs 2025-2026, OIR, English, Defence.`
+    };
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 8000,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages: [{ role: 'user', content: `Today: ${today}.\n${prompts[cat]}${avoidStr}\n\nUse web_search for latest 2025-2026 news for current affairs accuracy.\n\nReturn ONLY valid JSON array (no markdown):\n[\n  {\n    "question": "Question text?",\n    "options": ["A text","B text","C text","D text"],\n    "correct": 0,\n    "explanation": "Clear educational explanation.",\n    "category": "GK"\n  }\n]\nRules: correct=index 0-3, all 4 options plausible, explanations clear, current affairs 2025-2026 only, SSB difficulty level.` }]
+        })
+      });
+      clearInterval(stepInt);
+      const data = await res.json();
+      let text = '';
+      if (data.content) { for (const b of data.content) { if (b.type==='text') text += b.text; } }
+      const match = text.replace(/```json|```/g,'').trim().match(/\[[\s\S]*\]/);
+      if (!match) throw new Error('No JSON found');
+      questions  = JSON.parse(match[0]);
+      currentQ   = 0; score = 0; wrongItems = [];
+      saveAsked(questions);
+      document.getElementById('loadScreen').style.display  = 'none';
+      document.getElementById('testScreen').style.display  = 'block';
+      showQ();
+    } catch(e) {
+      clearInterval(stepInt);
+      alert('Questions load ஆகலை da! Internet check பண்ணு. Error: ' + e.message);
+      showCat();
+    }
+  }
+
+  function showQ() {
+    answered = false;
+    const q   = questions[currentQ];
+    const tot = questions.length;
+    const tSec = timings[category] || 30;
+    document.getElementById('qCounter').textContent  = `Q ${currentQ+1} / ${tot}`;
+    document.getElementById('progFill').style.width  = `${(currentQ/tot)*100}%`;
+    document.getElementById('scoreLive').textContent = `Score: ${score}/${currentQ}`;
+    const badge = document.getElementById('qBadge');
+    badge.textContent = q.category || category;
+    const bmap = {'GK':'badge-gk','Current Affairs':'badge-current','OIR':'badge-oir','English':'badge-english','Defence':'badge-defence','Mixed':'badge-mixed'};
+    badge.className = 'q-badge ' + (bmap[q.category] || bmap[category] || 'badge-gk');
+    document.getElementById('qText').textContent = q.question;
+    const cont = document.getElementById('optsContainer');
+    cont.innerHTML = '';
+    ['A','B','C','D'].forEach((L,i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerHTML = `<span class="opt-label">${L}</span>${q.options[i]}`;
+      btn.onclick   = () => pick(i, btn);
+      cont.appendChild(btn);
+    });
+    document.getElementById('expBox').className  = 'exp-box';
+    document.getElementById('nextBtn').className = 'next-btn';
+    startTimer(tSec);
+  }
+
+  function startTimer(sec) {
+    clearInterval(timerInt);
+    timeLeft = sec;
+    updateTimer();
+    timerInt = setInterval(() => {
+      timeLeft--;
+      updateTimer();
+      if (timeLeft <= 0) { clearInterval(timerInt); if (!answered) timesUp(); }
+    }, 1000);
+  }
+
+  function updateTimer() {
+    const el = document.getElementById('timerBox');
+    el.textContent = `⏱ ${timeLeft}s`;
+    el.className   = timeLeft <= 10 ? 'timer-box warn' : 'timer-box';
+  }
+
+  function timesUp() {
+    answered = true;
+    const q  = questions[currentQ];
+    document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+    document.querySelectorAll('.opt-btn')[q.correct].classList.add('correct');
+    showExp(q, -1);
+    wrongItems.push({ idx: currentQ, yours: -1 });
+    document.getElementById('nextBtn').className = 'next-btn show';
+  }
+
+  function pick(i, btn) {
+    if (answered) return;
+    answered = true;
+    clearInterval(timerInt);
+    const q    = questions[currentQ];
+    const btns = document.querySelectorAll('.opt-btn');
+    btns.forEach(b => b.disabled = true);
+    if (i === q.correct) { btn.classList.add('correct'); score++; }
+    else { btn.classList.add('wrong'); btns[q.correct].classList.add('correct'); wrongItems.push({ idx: currentQ, yours: i }); }
+    showExp(q, i);
+    document.getElementById('nextBtn').className = 'next-btn show';
+  }
+
+  function showExp(q, yours) {
+    const box = document.getElementById('expBox');
+    const isOk = yours === q.correct;
+    box.className = 'exp-box show ' + (isOk ? 'right' : 'wrong');
+    document.getElementById('expHead').textContent = isOk ? '✅ Correct!' : (yours===-1 ? '⏰ Time Up!' : '❌ Wrong!');
+    document.getElementById('expBody').innerHTML   = `<strong>Correct Answer:</strong> ${q.options[q.correct]}<br><br><strong>Explanation:</strong> ${q.explanation}`;
+  }
+
+  function nextQ() {
+    currentQ++;
+    if (currentQ >= questions.length) showResult();
+    else showQ();
+  }
+
+  function showResult() {
+    clearInterval(timerInt);
+    document.getElementById('testScreen').style.display   = 'none';
+    document.getElementById('resultScreen').style.display = 'block';
+    const tot = questions.length;
+    const pct = Math.round((score/tot)*100);
+    const xp  = score * 6;
+    const key = pct>=80?'great':pct>=60?'good':pct>=40?'ok':'poor';
+    const circle = document.getElementById('resCircle');
+    circle.textContent = pct + '%';
+    circle.className   = 'res-circle res-' + key;
+    const msgs = {
+      great:['Excellent da! 🎉', name + ', SSB-க்கு ready! Keep it up! success alwats with ours'],
+      good: ['Good Job! 💪',     name + ', நல்லா இருக்கு! Wrong answers review பண்ணு. success alwats with ours'],
+      ok:   ['Keep Going! 📚',   name + ', பரவாயில்லை! Daily practice பண்ணா improve ஆகும். success alwats with ours'],
+      poor: ['Practice More! 💡',name + ', don\'t give up! Review பண்ணி again try பண்ணு! success alwats with ours']
+    };
+    document.getElementById('resTitle').textContent = msgs[key][0];
+    document.getElementById('resSub').textContent   = msgs[key][1];
+    document.getElementById('rsTotal').textContent  = tot;
+    document.getElementById('rsRight').textContent  = score;
+    document.getElementById('rsWrong').textContent  = tot - score;
+    document.getElementById('rsXP').textContent     = '+' + xp;
+    const today = new Date().toDateString();
+    localStorage.setItem('score_' + today, pct);
+    localStorage.setItem('totalXP', parseInt(localStorage.getItem('totalXP')||'0') + xp);
+    const hist = JSON.parse(localStorage.getItem('testHistory_' + today) || '[]');
+    hist.push({ cat: category, count: tot, score: pct, xp });
+    localStorage.setItem('testHistory_' + today, JSON.stringify(hist));
+    const L = ['A','B','C','D'];
+    const rev = document.getElementById('reviewList');
+    if (!wrongItems.length) {
+      rev.innerHTML = '<div style="background:#e8f5e9;border-radius:12px;padding:14px;color:#1b5e20;font-weight:600;text-align:center;">🎯 Perfect Score! எல்லாம் correct!</div>';
+    } else {
+      rev.innerHTML = wrongItems.map(w => {
+        const q = questions[w.idx];
+        const yourText = w.yours===-1 ? '⏰ Time Up' : `${L[w.yours]}: ${q.options[w.yours]}`;
+        return `<div class="rev-card"><div class="rev-q">${w.idx+1}. ${q.question}</div><div class="rev-row rev-yours">❌ Your answer: ${yourText}</div><div class="rev-row rev-correct">✅ Correct: ${L[q.correct]}: ${q.options[q.correct]}</div><div class="rev-row rev-exp">💡 ${q.explanation}</div></div>`;
+      }).join('');
+    }
+  }
+
+  function showCat() {
+    document.getElementById('resultScreen').style.display = 'none';
+    document.getElementById('catScreen').style.display    = 'block';
+    loadHistory();
+  }
+</script>
+</body>
+</html>

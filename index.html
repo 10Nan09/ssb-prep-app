@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SSB Prep — Profile Setup</title>
+  <script src="config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
+    .top-bar { background: #1a3c5e; color: white; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+    .top-bar h1 { font-size: 18px; font-weight: 600; }
+    .top-bar span { font-size: 12px; opacity: 0.7; }
+    .progress-bar-wrap { background: #0f2740; padding: 10px 20px; }
+    .progress-steps { display: flex; gap: 6px; }
+    .step { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2); }
+    .step.active { background: #4CAF50; }
+    .step-label { display: flex; justify-content: space-between; margin-top: 6px; }
+    .step-label span { font-size: 10px; color: rgba(255,255,255,0.6); }
+    .step-label span.active { color: #4CAF50; font-weight: 600; }
+    .container { max-width: 540px; margin: 0 auto; padding: 20px 16px 40px; }
+    .section-card { background: white; border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .section-title { font-size: 14px; font-weight: 600; color: #1a3c5e; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1.5px solid #eef2f7; padding-bottom: 10px; }
+    .section-icon { font-size: 18px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .field input, .field select { width: 100%; padding: 11px 14px; border: 1.5px solid #e0e7ef; border-radius: 10px; font-size: 14px; color: #222; background: #fafbfc; outline: none; transition: border 0.2s; }
+    .field input:focus, .field select:focus { border-color: #1a3c5e; background: white; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .entry-btn { border: 2px solid #e0e7ef; border-radius: 12px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s; background: white; }
+    .entry-btn:hover { border-color: #1a3c5e; background: #f0f4f8; }
+    .entry-btn.selected { border-color: #1a3c5e; background: #e8f0fe; }
+    .entry-btn .entry-title { font-size: 13px; font-weight: 600; color: #1a3c5e; }
+    .entry-btn .entry-sub { font-size: 11px; color: #888; margin-top: 3px; }
+    .entry-btn .entry-icon { font-size: 22px; margin-bottom: 4px; }
+    .eligibility-box { background: #e8f5e9; border: 1.5px solid #a5d6a7; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #2e7d32; margin-top: 12px; display: none; }
+    .eligibility-box.show { display: block; }
+    .eligibility-box.warn { background: #fff8e1; border-color: #ffe082; color: #f57f17; }
+    .countdown-box { background: linear-gradient(135deg, #1a3c5e, #2563a8); border-radius: 12px; padding: 16px; color: white; text-align: center; margin-top: 4px; }
+    .countdown-box .days { font-size: 42px; font-weight: 700; }
+    .countdown-box .days-label { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+    .countdown-box .exam-date { font-size: 11px; opacity: 0.6; margin-top: 8px; }
+    .physical-note { font-size: 11px; color: #888; margin-top: 4px; }
+    .physical-status { font-size: 12px; font-weight: 600; margin-top: 8px; padding: 8px 12px; border-radius: 8px; display: none; }
+    .physical-status.ok { background: #e8f5e9; color: #2e7d32; display: block; }
+    .physical-status.low { background: #ffebee; color: #c62828; display: block; }
+    .submit-btn { width: 100%; background: #1a3c5e; color: white; border: none; border-radius: 12px; padding: 15px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+    .submit-btn:hover { background: #2563a8; }
+  </style>
+</head>
+<body>
+<div class="top-bar">
+  <div>
+    <h1>🪖 SSB Prep App</h1>
+    <span>Personal AI Preparation Assistant — ni8.ai</span>
+  </div>
+</div>
+<div class="progress-bar-wrap">
+  <div class="progress-steps">
+    <div class="step active"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+  </div>
+  <div class="step-label">
+    <span class="active">Profile</span>
+    <span>Dashboard</span>
+    <span>Tests</span>
+    <span>Practice</span>
+  </div>
+</div>
+<div class="container">
+  <div id="formSection">
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">👤</span> Personal Details</div>
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="fullName" placeholder="Enter your full name(eg.NANDHINIDINESH)" />
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="dob" onchange="calcAge()" />
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="text" id="age" placeholder="Auto calculate" readonly style="background:#f0f4f8;" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <select id="gender">
+          <option value="">Select</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">📚</span> Education Details</div>
+      <div class="field">
+        <label>Current Education Level</label>
+        <select id="eduLevel" onchange="checkEligibility()">
+          <option value="">Select your level</option>
+          <option value="10th">10th (studying/completed)</option>
+          <option value="12th">12th (studying/completed)</option>
+          <option value="graduate">Graduate</option>
+          <option value="diploma">Diploma</option>
+          <option value="pursuing">pursuing</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Stream</label>
+        <select id="stream" onchange="checkEligibility()">
+          <option value="">Select stream</option>
+          <option value="pcm">PCM (Physics, Chemistry, Maths)</option>
+          <option value="engineering">Engineering (B.E / B.Tech / M.E)</option>
+          <option value="bio">PCB / BSc Biology</option>
+          <option value="arts">Arts</option>
+          <option value="commerce">Commerce</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Percentage / CGPA</label>
+        <input type="number" id="percentage" placeholder="Ex: 75" min="0" max="100" onchange="checkEligibility()" />
+      </div>
+      <div class="eligibility-box" id="eligibilityBox"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">🎯</span> Target Army Entry</div>
+      <p style="font-size:12px; color:#888; margin-bottom:12px;">உனக்கு எந்த entry சரியான்னு select பண்ணு</p>
+      <div class="entry-grid">
+        <div class="entry-btn" onclick="selectEntry(this, 'NDA')">
+          <div class="entry-icon">⚔️</div>
+          <div class="entry-title">NDA</div>
+          <div class="entry-sub">After 12th • Age 16.5–19.5</div>
+        </div>
+        <div class="entry-btn" onclick="selectEntry(this, 'TES')">
+          <div class="entry-icon">🔧</div>
+          <div class="entry-title">TES</div>
+          <div class="entry-sub">PCM 60%+ • JEE score</div>
+        </div>
+        <div class="entry-btn" onclick="selectEntry(this, 'CDS')">
+          <div class="entry-icon">🎖️</div>
+          <div class="entry-title">CDS</div>
+          <div class="entry-sub">After Graduation</div>
+        </div>
+        <div class="entry-btn" onclick="selectEntry(this, 'SSC Tech')">
+          <div class="entry-icon">🏫</div>
+          <div class="entry-title">SSC Tech</div>
+          <div class="entry-sub">Engineering Graduate</div>
+        </div>
+      </div>
+      <input type="hidden" id="selectedEntry" />
+    </div>
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">📅</span> SSB Exam Date</div>
+      <div class="field">
+        <label>Your SSB Interview Date</label>
+        <input type="date" id="examDate" value="2026-07-04" onchange="updateCountdown()" />
+      </div>
+      <div class="countdown-box">
+        <div class="days" id="daysLeft">--</div>
+        <div class="days-label">days left for SSB Interview</div>
+        <div class="exam-date" id="examDateDisplay">Set your exam date above</div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">💪</span> Physical Stats</div>
+      <div class="row-3">
+        <div class="field">
+          <label>Height (cm)</label>
+          <input type="number" id="height" placeholder="Ex: 170" onchange="checkPhysical()" />
+          <div class="physical-note">Min: 157.5 cm</div>
+        </div>
+        <div class="field">
+          <label>Weight (kg)</label>
+          <input type="number" id="weight" placeholder="Ex: 65" />
+        </div>
+        <div class="field">
+          <label>Chest (cm)</label>
+          <input type="number" id="chest" placeholder="Ex: 80" onchange="checkPhysical()" />
+          <div class="physical-note">Min: 77 cm</div>
+        </div>
+      </div>
+      <div class="physical-status" id="physicalStatus"></div>
+    </div>
+    <button class="submit-btn" onclick="submitProfile()">Save Profile & Start Preparing 🚀</button>
+  </div>
+</div>
+<script>
+  function calcAge() {
+    const dob = new Date(document.getElementById('dob').value);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    document.getElementById('age').value = age + ' years';
+  }
+
+  function checkEligibility() {
+    const edu = document.getElementById('eduLevel').value;
+    const stream = document.getElementById('stream').value;
+    const pct = parseFloat(document.getElementById('percentage').value);
+    const box = document.getElementById('eligibilityBox');
+    if (!edu || !stream) return;
+    box.className = 'eligibility-box';
+    if (edu === '12th' && stream === 'pcm' && pct >= 60) {
+      box.textContent = '✅ NDA & TES entry-க்கு eligible! Good to go.';
+      box.className = 'eligibility-box show';
+    } else if (edu === '12th' && stream === 'pcm' && pct < 60) {
+      box.textContent = '⚠️ TES-க்கு PCM-ல 60% வேணும். NDA try பண்ணலாம்!';
+      box.className = 'eligibility-box show warn';
+    } else if (edu === 'graduate' || stream === 'engineering') {
+      box.textContent = '✅ CDS & SSC Tech entry-க்கு eligible!';
+      box.className = 'eligibility-box show';
+    } else if (edu === '10th') {
+      box.textContent = 'ℹ️ 12th முடிச்சதும் NDA / TES apply பண்ணலாம். Prepare பண்ண start பண்ணலாம்!';
+      box.className = 'eligibility-box show warn';
+    }
+  }
+
+  function selectEntry(el, entry) {
+    document.querySelectorAll('.entry-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('selectedEntry').value = entry;
+  }
+
+  function updateCountdown() {
+    const examDate = new Date(document.getElementById('examDate').value);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.ceil((examDate - today) / (1000*60*60*24));
+    document.getElementById('daysLeft').textContent = diff > 0 ? diff : 0;
+    document.getElementById('examDateDisplay').textContent = 'Exam: ' + examDate.toDateString();
+  }
+
+  function checkPhysical() {
+    const height = parseFloat(document.getElementById('height').value);
+    const chest = parseFloat(document.getElementById('chest').value);
+    const status = document.getElementById('physicalStatus');
+    if (!height && !chest) return;
+    const heightOk = !height || height >= 157.5;
+    const chestOk = !chest || chest >= 77;
+    if (heightOk && chestOk) {
+      status.textContent = '✅ Physical stats — Army standards meet ஆகுது!';
+      status.className = 'physical-status ok';
+    } else {
+      let msg = '⚠️ ';
+      if (!heightOk) msg += 'Height minimum 157.5 cm வேணும். ';
+      if (!chestOk) msg += 'Chest minimum 77 cm வேணும்.';
+      status.textContent = msg;
+      status.className = 'physical-status low';
+    }
+  }
+
+  function submitProfile() {
+    const name = document.getElementById('fullName').value.trim();
+    if (!name) { alert('Enter your name!'); return; }
+    const profile = {
+      name,
+      dob: document.getElementById('dob').value,
+      age: document.getElementById('age').value,
+      gender: document.getElementById('gender').value,
+      eduLevel: document.getElementById('eduLevel').value,
+      stream: document.getElementById('stream').value,
+      percentage: document.getElementById('percentage').value,
+      targetEntry: document.getElementById('selectedEntry').value,
+      examDate: document.getElementById('examDate').value,
+      height: document.getElementById('height').value,
+      weight: document.getElementById('weight').value,
+      chest: document.getElementById('chest').value
+    };
+    localStorage.setItem('ssbProfile', JSON.stringify(profile));
+
+// Firebase-லயும் save பண்ணு
+firebase.initializeApp(firebaseConfig);
+const user = firebase.auth().currentUser;
+if (user) {
+  firebase.firestore()
+    .collection('users')
+    .doc(user.uid)
+    .collection('data')
+    .doc('profile')
+    .set(profile)
+    .then(() => {
+      window.location.href = 'pages/dashboard.html';
+    });
+} else {
+  window.location.href = 'pages/dashboard.html';
+}
+  }
+
+  updateCountdown();
+</script>
+</body>
+</html>
