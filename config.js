@@ -1,5 +1,4 @@
-// SSB Prep App — API Configuration
-// இந்த file-ல மட்டும் key மாத்தா — எல்லா pages-உம் update ஆகும்!
+
 const CONFIG = {
   CLAUDE_API_KEY: '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'
 };

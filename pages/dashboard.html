@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title>SSB Prep — Dashboard</title>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -10,100 +10,85 @@
   <script src="../config.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; }
-    .top-bar { background: #1a3c5e; color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .top-bar .greeting { font-size: 12px; opacity: 0.75; margin-top: 2px; }
-    .rank-badge { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .container { max-width: 540px; margin: 0 auto; padding: 16px 14px 80px; }
-    .countdown-card { background: #1a3c5e; border-radius: 16px; padding: 20px; color: white; margin-bottom: 14px; text-align: center; position: relative; overflow: hidden; }
-    .countdown-card::before { content: '🪖'; position: absolute; font-size: 80px; opacity: 0.08; right: -10px; top: -10px; }
-    .countdown-label { font-size: 12px; opacity: 0.7; margin-bottom: 6px; }
-    .countdown-days { font-size: 52px; font-weight: 700; line-height: 1; }
-    .countdown-sub { font-size: 13px; opacity: 0.8; margin-top: 4px; }
-    .countdown-date { font-size: 11px; opacity: 0.55; margin-top: 8px; }
-    .countdown-progress { background: rgba(255,255,255,0.15); height: 6px; border-radius: 3px; margin-top: 14px; overflow: hidden; }
-    .countdown-progress-fill { height: 100%; border-radius: 3px; background: #4CAF50; transition: width 0.5s; }
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-    .stat-card { background: white; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    .stat-icon { font-size: 22px; margin-bottom: 4px; }
-    .stat-num { font-size: 22px; font-weight: 700; color: #1a3c5e; }
-    .stat-label { font-size: 10px; color: #888; margin-top: 2px; }
-    .section-card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    .section-title { font-size: 13px; font-weight: 600; color: #1a3c5e; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-    .section-title span { font-size: 11px; color: #888; font-weight: 400; }
-    .task-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f4f8; cursor: pointer; }
-    .task-item:last-child { border-bottom: none; }
-    .task-check { width: 22px; height: 22px; border: 2px solid #dde3ea; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 13px; }
-    .task-item.done .task-check { background: #4CAF50; border-color: #4CAF50; color: white; }
-    .task-item.done .task-text { text-decoration: line-through; color: #aaa; }
-    .task-text { font-size: 13px; color: #333; flex: 1; }
-    .task-xp { font-size: 11px; color: #f57f17; font-weight: 600; background: #fff8e1; padding: 2px 7px; border-radius: 10px; }
-    .xp-bar-wrap { background: #f0f4f8; border-radius: 10px; height: 10px; overflow: hidden; margin-top: 8px; }
-    .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #1a3c5e, #2563a8); border-radius: 10px; transition: width 0.4s; }
-    .xp-label { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 4px; }
-    .news-item { padding: 10px 0; border-bottom: 1px solid #f0f4f8; font-size: 13px; color: #333; line-height: 1.5; }
-    .news-item:last-child { border-bottom: none; }
-    .news-tag { font-size: 10px; background: #e8f0fe; color: #1a3c5e; padding: 2px 8px; border-radius: 10px; margin-right: 6px; font-weight: 600; }
-    .word-card { background: #1a3c5e; border-radius: 12px; padding: 14px 16px; color: white; }
-    .word-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-    .word-type { font-size: 11px; opacity: 0.6; margin-bottom: 8px; }
-    .word-meaning { font-size: 13px; opacity: 0.9; line-height: 1.5; }
-    .word-example { font-size: 12px; opacity: 0.65; margin-top: 6px; font-style: italic; }
-    .mood-row { display: flex; gap: 10px; justify-content: center; }
-    .mood-btn { flex: 1; padding: 10px 6px; border-radius: 10px; border: 2px solid #e0e7ef; background: white; text-align: center; cursor: pointer; transition: all 0.2s; font-size: 11px; color: #555; }
-    .mood-btn .mood-icon { font-size: 24px; display: block; margin-bottom: 4px; }
-    .mood-btn:hover, .mood-btn.selected { border-color: #1a3c5e; background: #e8f0fe; }
-    .ai-message { background: #f0f4f8; border-left: 3px solid #1a3c5e; border-radius: 0 10px 10px 0; padding: 12px 14px; font-size: 13px; color: #333; line-height: 1.6; }
-    .ai-name { font-size: 11px; font-weight: 600; color: #1a3c5e; margin-bottom: 4px; }
-    .ni8-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .ni8-avatar { width: 38px; height: 38px; background: #1a3c5e; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; flex-shrink: 0; }
-    .ni8-info .ni8-title { font-size: 14px; font-weight: 600; color: #1a3c5e; }
-    .ni8-info .ni8-subtitle { font-size: 11px; color: #4CAF50; }
-    .ni8-msg { display: flex; justify-content: flex-start; }
-    .user-msg { display: flex; justify-content: flex-end; }
-    .ni8-bubble { background: #e8f0fe; color: #1a3c5e; padding: 10px 14px; border-radius: 0 12px 12px 12px; font-size: 13px; max-width: 80%; line-height: 1.5; }
-    .user-bubble { background: #1a3c5e; color: white; padding: 10px 14px; border-radius: 12px 0 12px 12px; font-size: 13px; max-width: 80%; line-height: 1.5; }
-    .ni8-typing { background: #e8f0fe; color: #888; padding: 10px 14px; border-radius: 0 12px 12px 12px; font-size: 13px; font-style: italic; display: inline-block; }
-    .quick-btn { background: #f0f4f8; border: 1.5px solid #e0e7ef; border-radius: 20px; padding: 6px 12px; font-size: 11px; cursor: pointer; color: #1a3c5e; }
-    .quick-btn:hover { background: #e8f0fe; border-color: #1a3c5e; }
-    .save-btn { width: 100%; background: #1a3c5e; color: white; border: none; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; }
-    .notif-btn { width: 100%; background: white; color: #1a3c5e; border: 2px solid #1a3c5e; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e0e7ef; display: flex; max-width: 540px; margin: 0 auto; }
-    .nav-item { flex: 1; padding: 10px 0; text-align: center; font-size: 10px; color: #888; cursor: pointer; }
-    .nav-item.active { color: #1a3c5e; font-weight: 600; }
-    .nav-icon { font-size: 20px; display: block; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;min-height:100vh;max-width:100vw;overflow-x:hidden;}
+    .top-bar{background:#1a3c5e;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+    .top-bar-left .greeting{font-size:16px;font-weight:600;}
+    .top-bar-left .subname{font-size:11px;opacity:0.75;margin-top:2px;}
+    .rank-badge{background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+    .container{padding:12px 12px 80px;max-width:600px;margin:0 auto;}
+    .countdown-card{background:#1a3c5e;border-radius:16px;padding:18px;color:white;margin-bottom:12px;text-align:center;position:relative;overflow:hidden;}
+    .countdown-card::before{content:'🪖';position:absolute;font-size:70px;opacity:0.08;right:-10px;top:-10px;}
+    .countdown-label{font-size:11px;opacity:0.7;margin-bottom:4px;}
+    .countdown-days{font-size:48px;font-weight:800;line-height:1;}
+    .countdown-sub{font-size:12px;opacity:0.8;margin-top:4px;}
+    .countdown-date{font-size:10px;opacity:0.55;margin-top:6px;}
+    .countdown-progress{background:rgba(255,255,255,0.15);height:5px;border-radius:3px;margin-top:12px;overflow:hidden;}
+    .countdown-progress-fill{height:100%;border-radius:3px;background:#4CAF50;transition:width 0.5s;}
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+    .stat-card{background:white;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+    .stat-icon{font-size:20px;margin-bottom:3px;}
+    .stat-num{font-size:20px;font-weight:700;color:#1a3c5e;}
+    .stat-label{font-size:9px;color:#888;margin-top:2px;}
+    .section-card{background:white;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+    .section-title{font-size:13px;font-weight:600;color:#1a3c5e;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+    .section-title span{font-size:10px;color:#888;font-weight:400;}
+    .task-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0f4f8;cursor:pointer;}
+    .task-item:last-child{border-bottom:none;}
+    .task-check{width:20px;height:20px;border:2px solid #dde3ea;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;}
+    .task-item.done .task-check{background:#4CAF50;border-color:#4CAF50;color:white;}
+    .task-item.done .task-text{text-decoration:line-through;color:#aaa;}
+    .task-text{font-size:13px;color:#333;flex:1;}
+    .task-xp{font-size:10px;color:#f57f17;font-weight:600;background:#fff8e1;padding:2px 6px;border-radius:8px;white-space:nowrap;}
+    .xp-bar-wrap{background:#f0f4f8;border-radius:8px;height:8px;overflow:hidden;margin-top:8px;}
+    .xp-bar-fill{height:100%;background:linear-gradient(90deg,#1a3c5e,#2563a8);border-radius:8px;transition:width 0.4s;}
+    .xp-label{display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:4px;}
+    .news-item{padding:8px 0;border-bottom:1px solid #f0f4f8;font-size:12px;color:#333;line-height:1.5;}
+    .news-item:last-child{border-bottom:none;}
+    .news-tag{font-size:9px;background:#e8f0fe;color:#1a3c5e;padding:2px 7px;border-radius:8px;margin-right:5px;font-weight:600;}
+    .word-card{background:#1a3c5e;border-radius:12px;padding:14px;color:white;}
+    .word-title{font-size:17px;font-weight:700;margin-bottom:3px;}
+    .word-type{font-size:10px;opacity:0.6;margin-bottom:6px;}
+    .word-meaning{font-size:12px;opacity:0.9;line-height:1.5;}
+    .word-example{font-size:11px;opacity:0.65;margin-top:5px;font-style:italic;}
+    .mood-row{display:flex;gap:8px;justify-content:center;}
+    .mood-btn{flex:1;padding:10px 4px;border-radius:10px;border:2px solid #e0e7ef;background:white;text-align:center;cursor:pointer;transition:all 0.2s;font-size:10px;color:#555;}
+    .mood-btn .mood-icon{font-size:22px;display:block;margin-bottom:3px;}
+    .mood-btn.selected{border-color:#1a3c5e;background:#e8f0fe;}
+    .ai-message{background:#f0f4f8;border-left:3px solid #1a3c5e;border-radius:0 10px 10px 0;padding:10px 12px;font-size:12px;color:#333;line-height:1.6;}
+    .ai-name{font-size:10px;font-weight:600;color:#1a3c5e;margin-bottom:3px;}
+    .ni8-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .ni8-avatar{width:36px;height:36px;background:#1a3c5e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:11px;flex-shrink:0;}
+    .ni8-info .ni8-title{font-size:13px;font-weight:600;color:#1a3c5e;}
+    .ni8-info .ni8-subtitle{font-size:10px;color:#4CAF50;}
+    .ni8-msg{display:flex;justify-content:flex-start;}
+    .user-msg{display:flex;justify-content:flex-end;}
+    .ni8-bubble{background:#e8f0fe;color:#1a3c5e;padding:9px 12px;border-radius:0 12px 12px 12px;font-size:12px;max-width:82%;line-height:1.5;}
+    .user-bubble{background:#1a3c5e;color:white;padding:9px 12px;border-radius:12px 0 12px 12px;font-size:12px;max-width:82%;line-height:1.5;}
+    .ni8-typing{background:#e8f0fe;color:#888;padding:9px 12px;border-radius:0 12px 12px 12px;font-size:12px;font-style:italic;display:inline-block;}
+    .quick-btn{background:#f0f4f8;border:1.5px solid #e0e7ef;border-radius:20px;padding:5px 10px;font-size:11px;cursor:pointer;color:#1a3c5e;white-space:nowrap;}
+    .quick-btn:hover{background:#e8f0fe;border-color:#1a3c5e;}
+    .quick-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+    .save-btn{width:100%;background:#1a3c5e;color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
+    .notif-btn{width:100%;background:white;color:#1a3c5e;border:2px solid #1a3c5e;border-radius:12px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #e0e7ef;display:flex;z-index:100;}
+    .nav-item{flex:1;padding:8px 0;text-align:center;font-size:10px;color:#888;cursor:pointer;}
+    .nav-item.active{color:#1a3c5e;font-weight:600;}
+    .nav-icon{font-size:22px;display:block;}
+    .chat-input-wrap{display:flex;gap:8px;margin-top:10px;}
+    .chat-input-wrap input{flex:1;padding:9px 12px;border:1.5px solid #e0e7ef;border-radius:10px;font-size:13px;outline:none;font-family:inherit;}
+    .chat-input-wrap input:focus{border-color:#1a3c5e;}
+    .chat-input-wrap button{background:#1a3c5e;color:white;border:none;border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer;}
   </style>
 </head>
 <body>
 <div class="top-bar">
-  <div>
-    <div style="font-size:17px; font-weight:600;" id="topGreeting"></div>
-    <div class="greeting" id="topName">Loading...</div>
+  <div class="top-bar-left">
+    <div class="greeting" id="topGreeting">Good morning! 👋</div>
+    <div class="subname" id="topName">Loading...</div>
   </div>
   <div class="rank-badge" id="rankBadge">🪖 Recruit</div>
 </div>
-
-<script>
-  function setGreeting() {
-    const hour = new Date().getHours();
-    let greeting = "";
-
-    if (hour >= 5 && hour < 12) {
-      greeting = "Good Morning! 🌅";
-    } else if (hour >= 12 && hour < 17) {
-      greeting = "Good Afternoon! ☀️";
-    } else if (hour >= 17 && hour < 21) {
-      greeting = "Good Evening! 🌆";
-    } else {
-      greeting = "Good Night! 🌙";
-    }
-
-    document.getElementById("topGreeting").textContent = greeting;
-  }
-
-  setGreeting();
-</script>
 
 <div class="container" id="dashboardCapture">
   <div class="countdown-card">
@@ -133,7 +118,7 @@
   <div class="section-card">
     <div class="section-title">🤖 ni8.ai says...</div>
     <div class="ai-message">
-      <div class="ai-name">ni8.ai — Your AI friend</div>
+      <div class="ai-name">ni8.ai — உன் AI Buddy</div>
       <div id="aiMessage">Loading...</div>
     </div>
   </div>
@@ -143,12 +128,12 @@
     <div id="taskList">
       <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">📰 Current affairs படி (15 min)</div><div class="task-xp">+10 XP</div></div>
       <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">🧠 Daily GK test எழுது</div><div class="task-xp">+15 XP</div></div>
-      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">🏃 Physical workout (running/pushups)</div><div class="task-xp">+10 XP</div></div>
-      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">🗣️ English speaking practice (10 min)</div><div class="task-xp">+10 XP</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">🏃 Physical workout</div><div class="task-xp">+10 XP</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">🗣️ English speaking (10 min)</div><div class="task-xp">+10 XP</div></div>
       <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">📝 PPDT story write பண்ணு</div><div class="task-xp">+15 XP</div></div>
     </div>
-    <div style="margin-top:14px;">
-      <div class="xp-label"><span>XP Progress</span><span id="xpText">0 / 500 XP</span></div>
+    <div style="margin-top:12px;">
+      <div class="xp-label"><span>XP Progress</span><span id="xpText">0/500 XP</span></div>
       <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
     </div>
   </div>
@@ -175,29 +160,25 @@
       <div class="ni8-avatar">n8</div>
       <div class="ni8-info">
         <div class="ni8-title">ni8.ai</div>
-        <div class="ni8-subtitle">● Online</div>
+        <div class="ni8-subtitle">● Online — உன் SSB Buddy</div>
       </div>
     </div>
-    <div id="ni8ChatBox" style="height:280px; overflow-y:auto; padding:8px 0; display:flex; flex-direction:column; gap:10px;">
-      <div class="ni8-msg">
-        <div class="ni8-bubble"><strong>ni8.ai:</strong> Hai da! 👋 நான் ni8.ai — உன் personal chatbot! Doubt இருந்தா கேளு, mood share பண்ணு, am always with you ethuva errunthalum thayangama share pannu — நான் 24/7 un kudave இருக்கேன்! 💪</div>
-      </div>
+    <div id="ni8ChatBox" style="height:260px;overflow-y:auto;padding:6px 0;display:flex;flex-direction:column;gap:8px;">
+      <div class="ni8-msg"><div class="ni8-bubble"><strong>ni8.ai:</strong> வணக்கம் da! 👋 நான் ni8.ai — உன் SSB buddy! Doubt கேளு, mood share பண்ணு! 💪</div></div>
     </div>
-    <div style="display:flex; gap:8px; margin-top:12px;">
-      <input type="text" id="ni8Input" placeholder="type anything..."
-        style="flex:1; padding:10px 14px; border:1.5px solid #e0e7ef; border-radius:10px; font-size:13px; outline:none;"
-        onkeypress="if(event.key==='Enter') sendToNi8()" />
-      <button onclick="sendToNi8()" style="background:#1a3c5e; color:white; border:none; border-radius:10px; padding:10px 16px; font-size:13px; cursor:pointer;">Send</button>
+    <div class="chat-input-wrap">
+      <input type="text" id="ni8Input" placeholder="ni8.ai-கிட்ட கேளு..." onkeypress="if(event.key==='Enter') sendToNi8()"/>
+      <button onclick="sendToNi8()">Send</button>
     </div>
-    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
-      <button class="quick-btn" onclick="quickMsg('Nervous-ஆ feel ஆகுது da')">😟 Nervous feel</button>
-      <button class="quick-btn" onclick="quickMsg('Mock interview practice பண்ணணும்')">🎯 Mock interview</button>
-      <button class="quick-btn" onclick="quickMsg('Motivation குடு da')">💪 Motivate me</button>
-      <button class="quick-btn" onclick="quickMsg('SSB-ல என்ன expect பண்ணணும்?')">❓ SSB tips</button>
+    <div class="quick-wrap">
+      <button class="quick-btn" onclick="quickMsg('Nervous-ஆ feel ஆகுது da')">😟 Nervous</button>
+      <button class="quick-btn" onclick="quickMsg('Mock interview பண்ணணும்')">🎯 Mock</button>
+      <button class="quick-btn" onclick="quickMsg('Motivation குடு da')">💪 Motivate</button>
+      <button class="quick-btn" onclick="quickMsg('SSB tips சொல்லு')">❓ SSB tips</button>
     </div>
   </div>
 
-  <button class="notif-btn" onclick="enableNotifications()" id="notifBtn">🔔 Enable Daily Reminders from ni8.ai</button>
+  <button class="notif-btn" onclick="enableNotifications()" id="notifBtn">🔔 Enable Daily Reminders</button>
   <button class="save-btn" onclick="window.location.href='ssb_report_card.html'">📊 View & Save Daily Report</button>
 </div>
 
@@ -205,279 +186,184 @@
   <div class="nav-item active"><span class="nav-icon">🏠</span>Home</div>
   <div class="nav-item" onclick="window.location.href='test.html'"><span class="nav-icon">📝</span>Tests</div>
   <div class="nav-item" onclick="window.location.href='practice.html'"><span class="nav-icon">🎯</span>Practice</div>
-  <div class="nav-item" onclick="window.location.href='../index.html'"><span class="nav-icon">👤</span>Profile</div>
+  <div class="nav-item" onclick="window.location.href='profile.html'"><span class="nav-icon">👤</span>Profile</div>
 </div>
 
 <script>
-  const CLAUDE_API_KEY = CONFIG.CLAUDE_API_KEY;
-  // Firebase init & sync
-let db = null;
-let currentUser = null;
-
-try {
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-  firebase.auth().onAuthStateChanged(async user => {
-    if (user) {
-      currentUser = user;
-      // Cloud-ல இருந்து data load பண்ணு
-      const dataDoc = await db.collection('users').doc(user.uid).collection('data').doc('progress').get();
-      if (dataDoc.exists) {
-        const cloudData = dataDoc.data();
-        // Cloud data-ஐ localStorage-ல sync பண்ணு
-        if (cloudData.totalXP)  localStorage.setItem('totalXP',  cloudData.totalXP);
-        if (cloudData.streak)   localStorage.setItem('streak',   cloudData.streak);
-        if (cloudData.lastVisit) localStorage.setItem('lastVisit', cloudData.lastVisit);
-        // Page refresh பண்ணி new data show பண்ணு
-        location.reload();
-      }
-    }
-  });
-} catch(e) { console.log('Firebase:', e); }
-
-// Cloud-ல save பண்ற function
-async function saveToCloud() {
-  if (!db || !currentUser) return;
-  try {
-    await db.collection('users').doc(currentUser.uid).collection('data').doc('progress').set({
-      totalXP:   parseInt(localStorage.getItem('totalXP')  || '0'),
-      streak:    parseInt(localStorage.getItem('streak')   || '1'),
-      lastVisit: localStorage.getItem('lastVisit') || new Date().toDateString(),
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
-  } catch(e) { console.log('Save error:', e); }
-}
-
+  const CLAUDE_API_KEY  = CONFIG.CLAUDE_API_KEY;
   const profile  = JSON.parse(localStorage.getItem('ssbProfile') || '{}');
   const name     = profile.name || 'Soldier';
   const examDate = new Date(profile.examDate || '2026-07-04');
 
   const hour  = new Date().getHours();
-  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greet = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
   document.getElementById('topGreeting').textContent = greet + '! 👋';
   document.getElementById('topName').textContent     = name + ' — SSB Prep';
 
   function updateCountdown() {
     const today = new Date(); today.setHours(0,0,0,0);
-    const diff  = Math.ceil((examDate - today) / (1000*60*60*24));
-    document.getElementById('daysLeft').textContent        = diff > 0 ? diff : 0;
-    document.getElementById('examDateDisplay').textContent = 'Exam: ' + examDate.toDateString();
-    const pct = Math.min(100, Math.max(0, Math.round(((90-diff)/90)*100)));
-    document.getElementById('prepProgress').style.width   = pct + '%';
+    const diff  = Math.ceil((examDate-today)/(1000*60*60*24));
+    document.getElementById('daysLeft').textContent        = diff>0?diff:0;
+    document.getElementById('examDateDisplay').textContent = 'Exam: '+examDate.toDateString();
+    document.getElementById('prepProgress').style.width   = Math.min(100,Math.max(0,Math.round(((90-diff)/90)*100)))+'%';
   }
   updateCountdown();
 
-  let streak  = parseInt(localStorage.getItem('streak')  || '1');
-  let totalXP = parseInt(localStorage.getItem('totalXP') || '0');
+  let streak  = parseInt(localStorage.getItem('streak')||'1');
+  let totalXP = parseInt(localStorage.getItem('totalXP')||'0');
   document.getElementById('streakCount').textContent = streak;
   document.getElementById('totalXP').textContent     = totalXP;
 
-  function getRank(xp) {
-    if (xp < 100)  return '🪖 Recruit';
-    if (xp < 300)  return '⚔️ Cadet';
-    if (xp < 600)  return '🎖️ Lance Naik';
-    if (xp < 1000) return '🏅 Havildar';
+  function getRank(xp){
+    if(xp<100) return '🪖 Recruit';
+    if(xp<300) return '⚔️ Cadet';
+    if(xp<600) return '🎖️ Lance Naik';
+    if(xp<1000) return '🏅 Havildar';
     return '⭐ Officer';
   }
   document.getElementById('rankBadge').textContent = getRank(totalXP);
 
-  // Streak tracking
-  function updateStreak() {
-    const today     = new Date().toDateString();
-    const lastVisit = localStorage.getItem('lastVisit');
-    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
-    if (lastVisit === today) return;
-    if (lastVisit === yesterday.toDateString()) { streak += 1; }
-    else if (lastVisit !== today) { streak = 1; }
-    localStorage.setItem('streak', streak);
-    localStorage.setItem('lastVisit', today);
-    document.getElementById('streakCount').textContent = streak;
+  function updateStreak(){
+    const today=new Date().toDateString();
+    const last=localStorage.getItem('lastVisit');
+    const yest=new Date(); yest.setDate(yest.getDate()-1);
+    if(last===today) return;
+    streak = last===yest.toDateString() ? streak+1 : 1;
+    localStorage.setItem('streak',streak);
+    localStorage.setItem('lastVisit',today);
+    document.getElementById('streakCount').textContent=streak;
   }
   updateStreak();
 
-  // Usage time tracking
-  const todayStr = new Date().toDateString();
-  setInterval(() => {
-    const prev = parseInt(localStorage.getItem('usage_' + todayStr) || '0');
-    localStorage.setItem('usage_' + todayStr, prev + 1);
-  }, 60000);
+  setInterval(()=>{
+    const t=new Date().toDateString();
+    localStorage.setItem('usage_'+t,(parseInt(localStorage.getItem('usage_'+t)||'0')+1));
+  },60000);
 
-  // Tasks
-  let tasksDone = 0;
-  function toggleTask(el) {
-    const xp = parseInt(el.querySelector('.task-xp').textContent.replace(/\D/g,''));
-    if (el.classList.contains('done')) {
-      el.classList.remove('done');
-      el.querySelector('.task-check').textContent = '';
-      tasksDone--; totalXP -= xp;
+  let tasksDone=0;
+  function toggleTask(el){
+    const xp=parseInt(el.querySelector('.task-xp').textContent.replace(/\D/g,''));
+    if(el.classList.contains('done')){
+      el.classList.remove('done'); el.querySelector('.task-check').textContent='';
+      tasksDone--; totalXP-=xp;
     } else {
-      el.classList.add('done');
-      el.querySelector('.task-check').textContent = '✓';
-      tasksDone++; totalXP += xp;
+      el.classList.add('done'); el.querySelector('.task-check').textContent='✓';
+      tasksDone++; totalXP+=xp;
     }
-    saveToCloud(); // Cloud-ல save பண்ணு
-    localStorage.setItem('totalXP', totalXP);
-    localStorage.setItem('tasksDone_' + new Date().toDateString(), tasksDone);
-    document.getElementById('tasksCount').textContent  = tasksDone + '/5';
-    document.getElementById('taskProgress').textContent = tasksDone + '/5 done';
-    document.getElementById('totalXP').textContent     = totalXP;
-    document.getElementById('rankBadge').textContent   = getRank(totalXP);
-    const pct = Math.min(100, Math.round((totalXP % 500) / 500 * 100));
-    document.getElementById('xpBar').style.width  = pct + '%';
-    document.getElementById('xpText').textContent = (totalXP % 500) + ' / 500 XP';
+    localStorage.setItem('totalXP',totalXP);
+    localStorage.setItem('tasksDone_'+new Date().toDateString(),tasksDone);
+    document.getElementById('tasksCount').textContent=tasksDone+'/5';
+    document.getElementById('taskProgress').textContent=tasksDone+'/5 done';
+    document.getElementById('totalXP').textContent=totalXP;
+    document.getElementById('rankBadge').textContent=getRank(totalXP);
+    document.getElementById('xpBar').style.width=Math.min(100,Math.round((totalXP%500)/500*100))+'%';
+    document.getElementById('xpText').textContent=(totalXP%500)+'/500 XP';
   }
 
-  // Mood
-  function selectMood(el, mood) {
-    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  function selectMood(el,mood){
+    document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
     el.classList.add('selected');
-    localStorage.setItem('todayMood', mood);
-    const responses = {
-      'Confident': 'Dei! 💪 Confident-ஆ இருக்கியா — that\'s the spirit! Iniku mock interview try பண்ணு!',
-      'Okay':      'Okay-ஆ இருக்கியா — பரவாயில்லை da! Daily tasks complete பண்ணு! 😊',
-      'Nervous':   'Nervous feel normal da! 🤗 Easy-ஆ start பண்ணு, confidence வரும்!',
-      'Tired':     'Rest எடு da! 😴 Light reading மட்டும் today, tomorrow strong-ஆ வா!'
-    };
-    const chatBox = document.getElementById('ni8ChatBox');
-    chatBox.innerHTML += `<div class="ni8-msg"><div class="ni8-bubble"><strong>ni8.ai:</strong> ${responses[mood]}</div></div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
+    localStorage.setItem('todayMood',mood);
+    const r={'Confident':'Dei! 💪 Confident-ஆ இருக்கியா! Mock interview try பண்ணு!','Okay':'Okay-ஆ இருக்கியா! Daily tasks complete பண்ணு! 😊','Nervous':'Nervous normal da! 🤗 Easy-ஆ start பண்ணு!','Tired':'Rest எடு da! 😴 Light reading மட்டும் today!'};
+    const box=document.getElementById('ni8ChatBox');
+    box.innerHTML+=`<div class="ni8-msg"><div class="ni8-bubble"><strong>ni8.ai:</strong> ${r[mood]}</div></div>`;
+    box.scrollTop=box.scrollHeight;
   }
 
-  // AI Content
-  async function loadAIContent() {
-    const today      = new Date().toDateString();
-    const lastLoaded = localStorage.getItem('aiContentDate');
-    if (lastLoaded === today) {
-      const saved = JSON.parse(localStorage.getItem('aiContent') || '{}');
-      if (saved.word) { applyAIContent(saved); return; }
+  async function loadAIContent(){
+    const today=new Date().toDateString();
+    if(localStorage.getItem('aiContentDate')===today){
+      const s=JSON.parse(localStorage.getItem('aiContent')||'{}');
+      if(s.word){applyAIContent(s);return;}
     }
-    document.getElementById('aiMessage').textContent = '⏳ ni8.ai content load ஆகுது...';
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 1000,
-          messages: [{ role: 'user', content: `Today is ${today}. Generate ONLY a valid JSON object (no extra text, no markdown):
-{
-  "word": "Resilience",
-  "wordType": "Noun (பெயர்ச்சொல்)",
-  "wordMeaning": "கஷ்டங்களிலிருந்து மீண்டு வருகிற திறன்",
-  "wordExample": "His resilience helped him clear the SSB interview.",
-  "news": [
-    "ARMY: One sentence Indian army news.",
-    "NDA: One sentence NDA/SSB news.",
-    "DEFENCE: One sentence Indian defence news."
-  ],
-  "tip": "Short Tanglish motivational tip for SSB prep today."
-}` }]
-        })
+    document.getElementById('aiMessage').textContent='⏳ ni8.ai loading...';
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Today is ${today}. Return ONLY valid JSON no markdown:\n{"word":"Resilience","wordType":"Noun (பெயர்ச்சொல்)","wordMeaning":"கஷ்டங்களிலிருந்து மீண்டு வருகிற திறன்","wordExample":"His resilience helped him clear SSB.","news":["ARMY: Indian Army news.","NDA: NDA/SSB news.","DEFENCE: Defence news."],"tip":"Short Tanglish SSB tip."}`}]})
       });
-      const data    = await res.json();
-      const clean   = data.content[0].text.replace(/```json|```/g,'').trim();
-      const content = JSON.parse(clean);
-      localStorage.setItem('aiContent', JSON.stringify(content));
-      localStorage.setItem('aiContentDate', today);
-      applyAIContent(content);
-    } catch(e) {
-      document.getElementById('aiMessage').textContent = 'வணக்கம் ' + name + '! 💪 Iniku tasks complete பண்ணு — every day counts!';
-      document.getElementById('wordTitle').textContent   = 'Perseverance';
-      document.getElementById('wordType').textContent    = 'Noun (பெயர்ச்சொல்)';
-      document.getElementById('wordMeaning').textContent = 'கஷ்டங்கள் இருந்தாலும் விடாமல் முயற்சி பண்றது.';
-      document.getElementById('wordExample').textContent = '"His perseverance helped him clear SSB."';
-      document.getElementById('news1').innerHTML = '<span class="news-tag">ARMY</span>Indian Army conducts high-altitude training in Ladakh.';
-      document.getElementById('news2').innerHTML = '<span class="news-tag">NDA</span>NDA 2026 SSB interviews scheduled for July batch.';
-      document.getElementById('news3').innerHTML = '<span class="news-tag">DEFENCE</span>India signs new defence modernisation deal worth ₹5000 crore.';
+      const data=await res.json();
+      const c=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+      localStorage.setItem('aiContent',JSON.stringify(c));
+      localStorage.setItem('aiContentDate',today);
+      applyAIContent(c);
+    } catch(e){
+      document.getElementById('aiMessage').textContent='வணக்கம் '+name+'! 💪 Tasks complete பண்ணு!';
+      document.getElementById('wordTitle').textContent='Perseverance';
+      document.getElementById('wordType').textContent='Noun (பெயர்ச்சொல்)';
+      document.getElementById('wordMeaning').textContent='கஷ்டங்கள் இருந்தாலும் விடாமல் முயற்சி பண்றது.';
+      document.getElementById('wordExample').textContent='"His perseverance helped him clear SSB."';
+      document.getElementById('news1').innerHTML='<span class="news-tag">ARMY</span>Indian Army high-altitude training in Ladakh.';
+      document.getElementById('news2').innerHTML='<span class="news-tag">NDA</span>NDA 2026 SSB interviews scheduled for July.';
+      document.getElementById('news3').innerHTML='<span class="news-tag">DEFENCE</span>India signs ₹5000 crore defence deal.';
     }
   }
 
-  function applyAIContent(c) {
-    document.getElementById('wordTitle').textContent   = c.word || 'Perseverance';
-    document.getElementById('wordType').textContent    = c.wordType || '';
-    document.getElementById('wordMeaning').textContent = c.wordMeaning || '';
-    document.getElementById('wordExample').textContent = '"' + (c.wordExample || '') + '"';
-    if (c.news && c.news.length >= 3) {
-      ['news1','news2','news3'].forEach((id, i) => {
-        const parts = c.news[i].split(':');
-        document.getElementById(id).innerHTML = `<span class="news-tag">${parts[0].trim()}</span>${parts.slice(1).join(':').trim()}`;
+  function applyAIContent(c){
+    document.getElementById('wordTitle').textContent=c.word||'Perseverance';
+    document.getElementById('wordType').textContent=c.wordType||'';
+    document.getElementById('wordMeaning').textContent=c.wordMeaning||'';
+    document.getElementById('wordExample').textContent='"'+(c.wordExample||'')+'"';
+    if(c.news&&c.news.length>=3){
+      ['news1','news2','news3'].forEach((id,i)=>{
+        const p=c.news[i].split(':');
+        document.getElementById(id).innerHTML=`<span class="news-tag">${p[0].trim()}</span>${p.slice(1).join(':').trim()}`;
       });
     }
-    const daysLeft = Math.ceil((examDate - new Date()) / (1000*60*60*24));
-    document.getElementById('aiMessage').textContent = 'வணக்கம் ' + name + '! ' + (c.tip||'') + ' — ' + daysLeft + ' days left! 💪';
+    const d=Math.ceil((examDate-new Date())/(1000*60*60*24));
+    document.getElementById('aiMessage').textContent='வணக்கம் '+name+'! '+(c.tip||'')+' — '+d+' days left! 💪';
   }
 
-  // ni8.ai Chat
-  const chatHistory = [];
-  async function sendToNi8() {
-    const input   = document.getElementById('ni8Input');
-    const msg     = input.value.trim();
-    if (!msg) return;
-    input.value   = '';
-    const chatBox = document.getElementById('ni8ChatBox');
-    const mood    = localStorage.getItem('todayMood') || 'Okay';
-    const daysLeft = Math.ceil((examDate - new Date()) / (1000*60*60*24));
-    chatBox.innerHTML += `<div class="user-msg"><div class="user-bubble">${msg}</div></div>`;
-    chatBox.innerHTML += `<div class="ni8-typing" id="ni8Typing">ni8.ai typing...</div>`;
-    chatBox.scrollTop  = chatBox.scrollHeight;
-    chatHistory.push({ role: 'user', content: msg });
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 300,
-          system: `You are ni8.ai, a close friendly AI buddy helping ${name} prepare for SSB Interview (Indian Army).
-Current mood: ${mood}. Days left: ${daysLeft} days (Exam: July 4, 2026).
-Reply in Tanglish (Tamil + English mix) like a best friend — warm, short, encouraging.
-Know everything about SSB: OIR, PPDT, WAT, SRT, TAT, GTO, personal interview. Sign as ni8.ai. Max 3-4 sentences.`,
-          messages: chatHistory
-        })
+  const chatHistory=[];
+  async function sendToNi8(){
+    const input=document.getElementById('ni8Input');
+    const msg=input.value.trim(); if(!msg) return;
+    input.value='';
+    const box=document.getElementById('ni8ChatBox');
+    const mood=localStorage.getItem('todayMood')||'Okay';
+    const d=Math.ceil((examDate-new Date())/(1000*60*60*24));
+    box.innerHTML+=`<div class="user-msg"><div class="user-bubble">${msg}</div></div>`;
+    box.innerHTML+=`<div class="ni8-typing" id="ni8Typing">ni8.ai typing...</div>`;
+    box.scrollTop=box.scrollHeight;
+    chatHistory.push({role:'user',content:msg});
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':CLAUDE_API_KEY,'anthropic-version':'2023-06-01'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:`You are ni8.ai, friendly AI buddy helping ${name} prepare for SSB Interview. Mood: ${mood}. Days left: ${d}. Reply in Tanglish, warm, short, max 3-4 sentences.`,messages:chatHistory})
       });
-      const data  = await res.json();
-      const reply = data.content[0].text;
-      chatHistory.push({ role: 'assistant', content: reply });
+      const data=await res.json();
+      const reply=data.content[0].text;
+      chatHistory.push({role:'assistant',content:reply});
       document.getElementById('ni8Typing')?.remove();
-      chatBox.innerHTML += `<div class="ni8-msg"><div class="ni8-bubble"><strong>ni8.ai:</strong> ${reply}</div></div>`;
-      chatBox.scrollTop  = chatBox.scrollHeight;
-    } catch(e) {
+      box.innerHTML+=`<div class="ni8-msg"><div class="ni8-bubble"><strong>ni8.ai:</strong> ${reply}</div></div>`;
+      box.scrollTop=box.scrollHeight;
+    } catch(e){
       document.getElementById('ni8Typing')?.remove();
-      chatBox.innerHTML += `<div class="ni8-msg"><div class="ni8-bubble">Sorry da, connection issue! Try again 🙏</div></div>`;
+      box.innerHTML+=`<div class="ni8-msg"><div class="ni8-bubble">Sorry da, try again! 🙏</div></div>`;
     }
   }
 
-  function quickMsg(msg) { document.getElementById('ni8Input').value = msg; sendToNi8(); }
+  function quickMsg(msg){document.getElementById('ni8Input').value=msg;sendToNi8();}
 
-  // Notifications
-  function enableNotifications() {
-    if (!('Notification' in window)) { alert('Browser notifications support பண்றதில்லை!'); return; }
-    Notification.requestPermission().then(p => {
-      if (p === 'granted') {
-        const btn = document.getElementById('notifBtn');
-        btn.textContent = '✅ Reminders Enabled!';
-        btn.style.background = '#e8f5e9'; btn.style.color = '#2e7d32'; btn.style.borderColor = '#4CAF50';
-        localStorage.setItem('notificationsEnabled', 'true');
-        new Notification('ni8.ai 🪖', { body: 'வணக்கம் ' + name + '! Daily reminders enabled! 🔔' });
-        scheduleReminder();
+  function enableNotifications(){
+    if(!('Notification' in window)){alert('Browser notifications support பண்றதில்லை!');return;}
+    Notification.requestPermission().then(p=>{
+      if(p==='granted'){
+        const btn=document.getElementById('notifBtn');
+        btn.textContent='✅ Reminders Enabled!';
+        btn.style.background='#e8f5e9';btn.style.color='#2e7d32';btn.style.borderColor='#4CAF50';
+        localStorage.setItem('notificationsEnabled','true');
+        new Notification('ni8.ai 🪖',{body:'வணக்கம் '+name+'! Daily reminders enabled! 🔔'});
       }
     });
   }
 
-  function scheduleReminder() {
-    const now = new Date();
-    const r   = new Date(); r.setHours(20,0,0,0);
-    if (now > r) r.setDate(r.getDate()+1);
-    setTimeout(() => {
-      const d = Math.ceil((examDate - new Date()) / (1000*60*60*24));
-      new Notification('ni8.ai 🪖 — Evening Check-in!', { body: name + ', ' + d + ' days மட்டுமே! Tasks complete ஆச்சா? 💪' });
-      scheduleReminder();
-    }, r - now);
-  }
-
-  if (localStorage.getItem('notificationsEnabled') === 'true' && Notification.permission === 'granted') {
-    const btn = document.getElementById('notifBtn');
-    btn.textContent = '✅ Reminders Enabled!';
-    btn.style.background = '#e8f5e9'; btn.style.color = '#2e7d32'; btn.style.borderColor = '#4CAF50';
-    scheduleReminder();
+  if(localStorage.getItem('notificationsEnabled')==='true'&&Notification.permission==='granted'){
+    const btn=document.getElementById('notifBtn');
+    btn.textContent='✅ Reminders Enabled!';
+    btn.style.background='#e8f5e9';btn.style.color='#2e7d32';btn.style.borderColor='#4CAF50';
   }
 
   loadAIContent();
